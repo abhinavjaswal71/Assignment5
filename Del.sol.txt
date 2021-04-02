@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.10;
+
+import “SafeYorkERC20Token.sol”;
+
+contract DEX {
+
+    IERC20 public token;
+
+    event Bought(uint256 amount);
+    event Sold(uint256 amount);
+
+    constructor() public {
+        token = new YorkERC20Token();
+    }
+    
+    function buy() payable public {
+        // retriving value from message and assigning to the buyingAmount
+       uint256 buyingAmount = msg.value;
+       // getting the token balance of external token and assigning to the tokenBalance
+	    uint256 tokenBalance = token.balanceOf(address(this));
+	    // buyingAmount amount should be greater than zero. otherwise, it will show the message.
+	    require(buyingAmount > 0, "Launch Some Ether");
+	    // tokenBalance must be greater than or equal to buyingAmount. otherwise, show the message.
+	    require(buyingAmount <= tokenBalance, "Not enough tokens in the reserve");
+	    token.transfer(msg.sender, buyingAmount);
+	    emit token.Transfer(address(this), msg.sender, buyingAmount);
+	    emit Bought(buyingAmount);
+    }
+    
+    function sell(uint256 amount) public {
+          require(amount > 0, "Sell tokens");
+        uint256 tokenAllowance = token.allowance(msg.sender, address(this));
+	    require(tokenAllowance >= amount, "Check the token allowance");
+	    // Approval of token
+	     token.approve(msg.sender, amount);
+	    token.transferFrom(msg.sender, address(this), amount);
+	    msg.sender.transfer(amount);
+	    // Emiting the token
+	    emit token.Transfer(msg.sender, address(this),amount);
+	    emit Sold(amount);
+    }
+
+}
